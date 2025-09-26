@@ -22,4 +22,12 @@ jobs:
       
       - name: Build project
         run: |
-          docker build -t my-app:latest -f docker/Dockerfile .
+          docker build -t jugalchanda7/python_cicd -f docker/Dockerfile .
+    
+      - name: docker login
+        run: |
+          echo ${{ secrets.DOCKER_TOKEN }}  | docker login -u "jugalchanda7" --password-stdin
+      
+      - name: Push to Docker Hub
+        run: |
+          docker push jugalchanda7/python_cicd:latest
