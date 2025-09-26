@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Flask Application Service
+  app:
+    image: harbor.devops.com:8083/test-app/demo-flask-app:${APP_TAG}
+    container_name: demo-flask-app
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: demo-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=demo_app
+      - POSTGRES_USER=demo_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-demo_password}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_user -d demo_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  postgres-data:
+    driver: local
+  app-logs:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
